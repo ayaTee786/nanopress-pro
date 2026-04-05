@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NanoPress Pro — Intelligent PDF Compressor</title>
+<meta name="description" content="Enterprise-grade PDF compression. 100% private, client-side. Up to 90% smaller files.">
+<meta name="theme-color" content="#0d0c0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS — exact homepage palette ── */
+:root{
+  --bg:    #0d0c0a;
+  --off:   #161411;
+  --card:  #1e1c18;
+  --ink:   #f0ece3;
+  --ink2:  #c2bdb4;
+  --gray:  #7a7570;
+  --line:  #2c2924;
+  --line2: #3d3a34;
+  --lime:  #c8f135;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red:   #f87171;
+  --g-l:   rgba(74,222,128,.12);
+  --r-l:   rgba(248,113,113,.12);
+  --a-l:   rgba(251,191,36,.10);
+  --l-l:   rgba(200,241,53,.10);
+  --l-b:   rgba(200,241,53,.25);
+  --l-g:   rgba(200,241,53,.08);
+  --H:     'Bricolage Grotesque',sans-serif;
+  --M:     'JetBrains Mono',monospace;
+  --r1:6px;--r2:10px;--r3:14px;--r4:20px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--H);background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:80px;overflow-x:hidden}
+
+/* ── Grain overlay — homepage recipe ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.028;mix-blend-mode:overlay;
+}
+/* ── Lime radial glow at top ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 900px 400px at 50% -80px,rgba(200,241,53,.055) 0%,transparent 65%);
+}
+
+/* ── Custom cursor ── */
+.cursor-dot{
+  width:9px;height:9px;background:var(--lime);border-radius:50%;
+  position:fixed;top:0;left:0;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);transition:width .15s,height .15s;
+  mix-blend-mode:difference;
+}
+.cursor-ring{
+  width:36px;height:36px;border:1.5px solid rgba(200,241,53,.35);
+  border-radius:50%;position:fixed;top:0;left:0;
+  pointer-events:none;z-index:9998;transform:translate(-50%,-50%);
+  transition:all .07s linear;
+}
+
+.wrap{max-width:1140px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+/* ── Two-column app layout ── */
+.app-grid{
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:52px;
+  align-items:start;
+  padding-top:36px;
+  padding-bottom:80px;
+}
+/* Settings column sticks while user scrolls results */
+.col-settings{
+  position:sticky;
+  top:24px;
+}
+.col-main{
+  min-width:0; /* prevent overflow in grid */
+}
+
+/* ── Left column hero heading ── */
+.col-hero{margin-bottom:32px}
+.col-hero-h{
+  font-family:var(--H);
+  font-size:clamp(34px,3.6vw,54px);
+  font-weight:800;
+  letter-spacing:-2px;
+  line-height:1.05;
+  color:var(--ink);
+  margin-bottom:12px;
+}
+.col-hero-h .hi{color:var(--lime)}
+.col-hero-sub{
+  font-family:var(--M);
+  font-size:12px;
+  color:var(--gray);
+  letter-spacing:.4px;
+  line-height:1.7;
+  max-width:480px;
+}
+.col-hero-pills{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;
+}
+.col-hero-pill{
+  font-family:var(--M);font-size:10px;font-weight:500;
+  letter-spacing:.5px;text-transform:uppercase;
+  padding:4px 10px;border-radius:4px;
+  background:var(--l-l);color:var(--lime);border:1px solid var(--l-b);
+}
+
+/* ── Settings column eyebrow ── */
+.settings-eyebrow{
+  font-family:var(--M);font-size:10px;font-weight:500;
+  color:var(--gray);text-transform:uppercase;letter-spacing:2px;
+  display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  padding-bottom:14px;border-bottom:1.5px solid var(--line);
+}
+.settings-eyebrow span{
+  font-family:var(--H);font-size:14px;font-weight:700;
+  color:var(--ink);letter-spacing:-.3px;text-transform:none;
+}
+
+/* ── Header ── */
+.header{
+  padding:48px 0 32px;
+  border-bottom:1.5px solid var(--line);
+  margin-bottom:0;
+}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.logo-mark{
+  width:44px;height:44px;
+  background:var(--lime);
+  border-radius:var(--r2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+  box-shadow:0 0 28px rgba(200,241,53,.3);
+  color:#0d0c0a;
+}
+.logo-name{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--ink)}
+.logo-name span{color:var(--lime)}
+.logo-badge{
+  font-family:var(--M);font-size:9px;font-weight:500;
+  background:var(--l-l);color:var(--lime);
+  border:1px solid var(--l-b);
+  padding:3px 9px;border-radius:4px;letter-spacing:1.5px;margin-left:6px;
+  text-transform:uppercase;
+}
+.header-sub{font-family:var(--M);font-size:11px;color:var(--gray);letter-spacing:.5px}
+
+/* ── Ticker ── */
+.ticker{
+  background:#0a0a08;padding:13px 0;overflow:hidden;
+  border-top:3px solid var(--lime);border-bottom:1.5px solid var(--line);
+  margin-bottom:36px;
+}
+.ticker-inner{display:flex;white-space:nowrap;animation:ticker 26s linear infinite}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-item{
+  font-family:var(--M);font-size:10px;font-weight:400;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.45);padding:0 24px;
+  display:inline-flex;align-items:center;
+}
+.t-item::after{content:'—';color:var(--lime);margin-left:24px;font-size:7px}
+
+/* ── Stats strip ── */
+.stats-banner{
+  display:flex;background:var(--off);
+  border:1.5px solid var(--line);border-radius:0;
+  overflow:hidden;margin-bottom:32px;
+  border-radius:var(--r4);
+}
+.stat-cell{
+  flex:1;padding:22px 20px;text-align:center;
+  border-right:1.5px solid var(--line);
+  transition:background .2s;
+}
+.stat-cell:last-child{border-right:none}
+.stat-cell:hover{background:var(--card)}
+.stat-val{
+  font-family:var(--H);font-size:32px;font-weight:800;
+  color:var(--ink);line-height:1;margin-bottom:6px;
+  letter-spacing:-1.5px;font-variant-numeric:tabular-nums;
+}
+.stat-val .acc{color:var(--lime)}
+.stat-lbl{font-family:var(--M);font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1.5px}
+
+/* ── Drop zone ── */
+.drop-zone{
+  background:var(--off);border:1.5px dashed var(--line2);
+  border-radius:var(--r4);padding:72px 40px;
+  text-align:center;cursor:pointer;transition:all .2s;
+  margin-bottom:20px;position:relative;overflow:hidden;
+}
+.drop-zone::after{
+  content:'';position:absolute;bottom:-60%;left:50%;transform:translateX(-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(200,241,53,.08) 0%,transparent 70%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.drop-zone:hover,.drop-zone.drag-over{
+  border-color:var(--lime);background:var(--card);transform:scale(0.995);
+}
+.drop-zone:hover::after,.drop-zone.drag-over::after{opacity:1}
+.drop-icon{font-size:56px;display:block;margin-bottom:18px;filter:drop-shadow(0 0 16px rgba(200,241,53,.45))}
+.drop-zone h2{font-size:22px;font-weight:800;letter-spacing:-.6px;margin-bottom:8px}
+.drop-zone p{font-family:var(--M);font-size:11px;color:var(--gray)}
+
+/* ── File bar ── */
+.file-bar{
+  display:none;align-items:center;gap:14px;
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r3);padding:14px 20px;margin-bottom:24px;
+}
+.file-info{flex:1;min-width:0}
+.file-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-size{font-family:var(--M);font-size:11px;color:var(--gray);margin-top:3px}
+.btn-ghost{
+  background:transparent;border:1.5px solid var(--line2);
+  padding:7px 14px;border-radius:var(--r1);color:var(--gray);
+  cursor:pointer;font-size:12px;font-family:var(--M);transition:all .18s;white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--red);color:var(--red);background:var(--r-l)}
+
+/* ── Batch queue ── */
+.batch-queue{
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r3);margin-bottom:24px;overflow:hidden;
+}
+.queue-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 18px;background:var(--card);cursor:pointer;
+  font-size:13px;font-weight:700;letter-spacing:-.2px;
+}
+.queue-header-right{display:flex;align-items:center;gap:10px}
+.queue-badge{
+  background:var(--lime);color:#0d0c0a;font-family:var(--M);
+  font-size:10px;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:.5px;
+}
+.queue-list{max-height:260px;overflow-y:auto}
+.queue-item{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 18px;border-bottom:1px solid var(--line);
+  transition:background .14s;
+}
+.queue-item:last-child{border-bottom:none}
+.queue-item:hover{background:rgba(255,255,255,.02)}
+.queue-item-name{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-item-size{font-family:var(--M);font-size:10px;color:var(--gray);white-space:nowrap}
+.queue-status{font-family:var(--M);font-size:10px;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0;letter-spacing:.3px}
+.queue-status.pending{background:rgba(255,255,255,.05);color:var(--gray)}
+.queue-status.processing{background:var(--l-l);color:var(--lime)}
+.queue-status.done{background:var(--g-l);color:var(--green)}
+.queue-status.failed{background:var(--r-l);color:var(--red)}
+.queue-remove{background:none;border:none;color:var(--gray);cursor:pointer;font-size:16px;padding:0 4px;transition:color .18s;flex-shrink:0}
+.queue-remove:hover{color:var(--red)}
+.batch-overall-bar{height:3px;background:var(--line)}
+.batch-overall-fill{height:100%;background:var(--lime);transition:width .4s ease;width:0%}
+
+/* ── Mode tabs ── */
+.mode-tabs{
+  display:flex;gap:3px;padding:4px;
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r3);margin-bottom:24px;
+}
+.mode-tab{
+  flex:1;padding:12px 14px;background:transparent;border:none;
+  color:var(--gray);font-family:var(--H);font-weight:700;font-size:13px;
+  cursor:pointer;border-radius:var(--r2);transition:all .18s;letter-spacing:-.2px;
+}
+.mode-tab:hover:not(.active){color:var(--ink);background:rgba(255,255,255,.04)}
+.mode-tab.active{background:var(--card);color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.6)}
+.mode-tab.active[data-mode="safe"]{color:var(--green)}
+.mode-tab.active[data-mode="balanced"]{color:var(--lime)}
+.mode-tab.active[data-mode="max"]{color:var(--amber)}
+
+/* ── Controls panel ── */
+.controls-panel{
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r4);padding:28px;margin-bottom:20px;
+}
+.ctrl-group{margin-bottom:24px}
+.ctrl-group:last-child{margin-bottom:0}
+/* Eyebrow-style labels — matches homepage sec-eyebrow */
+.ctrl-label{
+  font-family:var(--M);font-size:10px;font-weight:500;
+  color:var(--lime);text-transform:uppercase;letter-spacing:2px;
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+}
+.ctrl-label::before{content:'';width:24px;height:2px;background:var(--lime);border-radius:1px;flex-shrink:0}
+
+/* Slider */
+.slider-row{display:flex;align-items:center;gap:14px}
+input[type="range"]{flex:1;height:4px;-webkit-appearance:none;background:var(--line2);border-radius:2px;outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--lime);border-radius:50%;cursor:pointer;box-shadow:0 0 10px rgba(200,241,53,.5);transition:transform .15s}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-val{font-family:var(--M);font-size:13px;font-weight:500;min-width:44px;text-align:right;color:var(--lime)}
+.est-hint{font-family:var(--M);font-size:10px;color:var(--gray);margin-top:9px;padding:8px 12px;background:var(--card);border-radius:var(--r1);border:1px solid var(--line)}
+.est-hint strong{color:var(--ink)}
+
+/* Profile buttons */
+.profile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.profile-btn{
+  background:var(--card);border:1.5px solid var(--line);
+  border-radius:var(--r2);padding:12px 8px;text-align:center;
+  cursor:pointer;transition:all .18s;color:var(--ink);
+}
+.profile-btn:hover{border-color:var(--line2);transform:translateY(-1px)}
+.profile-btn.active{border-color:var(--lime);background:var(--l-g)}
+.pname{font-size:12px;font-weight:700;display:block;margin-bottom:3px;letter-spacing:-.2px}
+.pdesc{font-family:var(--M);font-size:9px;color:var(--gray);display:block;margin-bottom:3px}
+.predu{font-family:var(--M);font-size:10px;color:var(--lime);display:block}
+
+/* OCR toggle */
+.ocr-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ocr-left{flex:1}
+.ocr-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.ocr-sub{font-family:var(--M);font-size:10px;color:var(--gray);margin-top:3px}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--line2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--lime);box-shadow:0 0 12px rgba(200,241,53,.35)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.toggle.on::after{left:23px}
+.lang-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.lang-label{font-family:var(--M);font-size:11px;color:var(--gray)}
+.lang-select{
+  background:var(--card);border:1.5px solid var(--line2);
+  border-radius:var(--r1);padding:6px 10px;
+  font-family:var(--M);font-size:11px;color:var(--ink);
+  outline:none;cursor:pointer;transition:border-color .18s;
+}
+.lang-select:focus{border-color:var(--lime);box-shadow:0 0 0 3px var(--l-l)}
+.page-range-input{
+  width:100%;padding:10px 14px;
+  background:var(--card);border:1.5px solid var(--line);
+  border-radius:var(--r2);color:var(--ink);
+  font-family:var(--M);font-size:12px;outline:none;transition:all .18s;
+}
+.page-range-input:focus{border-color:var(--lime);box-shadow:0 0 0 3px var(--l-l)}
+.range-hint{font-family:var(--M);font-size:10px;color:var(--gray);margin-top:6px;display:block}
+
+/* ── Metadata panel ── */
+.meta-panel{
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r4);overflow:hidden;margin-bottom:24px;
+}
+.meta-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:background .18s}
+.meta-header:hover{background:var(--card)}
+.meta-header-left{display:flex;align-items:center;gap:12px}
+.meta-title{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.meta-sub-txt{font-family:var(--M);font-size:10px;color:var(--gray);margin-top:2px}
+.meta-chevron{font-size:12px;color:var(--gray);transition:transform .2s}
+.meta-panel.open .meta-chevron{transform:rotate(180deg)}
+.meta-body{display:none;flex-direction:column;gap:14px;padding:20px;border-top:1px solid var(--line)}
+.meta-panel.open .meta-body{display:flex}
+.meta-field label{
+  font-family:var(--M);font-size:10px;color:var(--gray);
+  text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;
+}
+.meta-field input,.meta-field textarea{
+  width:100%;background:var(--card);border:1.5px solid var(--line);
+  border-radius:var(--r2);padding:10px 14px;color:var(--ink);
+  font-family:var(--M);font-size:12px;outline:none;transition:all .18s;resize:vertical;
+}
+.meta-field input:focus,.meta-field textarea:focus{border-color:var(--lime);box-shadow:0 0 0 3px var(--l-l)}
+.meta-note{font-family:var(--M);font-size:10px;color:var(--gray);line-height:1.6;padding:10px 12px;background:var(--card);border-radius:var(--r2)}
+
+/* ── Compress button — homepage primary style ── */
+.compress-btn{
+  width:100%;padding:19px;
+  background:var(--lime);border:none;border-radius:var(--r3);
+  color:#0d0c0a;font-family:var(--H);font-size:17px;font-weight:800;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .18s;margin-bottom:24px;letter-spacing:-.3px;
+  box-shadow:0 4px 24px rgba(200,241,53,.28);
+}
+.compress-btn:hover{background:#d4ff3d;transform:translateY(-2px);box-shadow:0 10px 32px rgba(200,241,53,.4)}
+.compress-btn:active{transform:translateY(0)}
+.compress-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── Progress ── */
+.progress-section{display:none;margin:28px 0}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-label{font-family:var(--M);font-size:12px;font-weight:500;color:var(--ink2)}
+.prog-pct{font-family:var(--M);font-size:12px;color:var(--gray)}
+.prog-track{
+  height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:20px;
+  border-top:none;
+}
+.prog-fill{
+  height:100%;border-radius:2px;width:0%;transition:width .35s ease;
+  background:linear-gradient(90deg,var(--lime),#a8e619,var(--lime));
+  background-size:200% 100%;animation:shimmer 2.5s linear infinite;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.steps{display:flex;flex-direction:column;gap:7px}
+.step{display:flex;align-items:center;gap:10px;font-family:var(--M);font-size:11px;color:var(--line2)}
+.step.active{color:var(--lime)}
+.step.done{color:var(--gray)}
+.step-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.step.active .step-dot{animation:pulse 1s infinite;box-shadow:0 0 6px currentColor}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+.prog-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.prog-timer{font-family:var(--M);font-size:11px;color:var(--gray)}
+.cancel-btn{
+  background:transparent;border:1.5px solid var(--line2);
+  border-radius:var(--r1);padding:5px 14px;
+  font-family:var(--M);font-size:11px;color:var(--gray);cursor:pointer;transition:all .18s;
+}
+.cancel-btn:hover{border-color:var(--red);color:var(--red);background:var(--r-l)}
+.batch-status-line{
+  font-family:var(--M);font-size:11px;color:var(--lime);
+  margin-top:12px;padding:8px 12px;
+  background:var(--l-l);border-radius:var(--r1);border:1px solid var(--l-b);
+}
+
+/* ── Single results ── */
+.results{display:none;margin-top:32px}
+.result-hero{
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r4);padding:44px 32px;
+  text-align:center;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.result-hero::before{
+  content:'';position:absolute;bottom:-60%;left:50%;transform:translateX(-50%);
+  width:500px;height:250px;
+  background:radial-gradient(ellipse,rgba(200,241,53,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.reduction-big{
+  font-size:84px;font-weight:800;letter-spacing:-4px;line-height:1;
+  color:var(--lime);
+}
+.reduction-lbl{font-family:var(--M);font-size:10px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:8px}
+.size-row{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:24px}
+.size-box{text-align:center}
+.size-val{font-family:var(--H);font-size:22px;font-weight:800;display:block;letter-spacing:-.5px}
+.size-lbl2{font-family:var(--M);font-size:10px;color:var(--gray);text-transform:uppercase;margin-top:3px;display:block}
+.size-arrow{font-size:22px;color:var(--line2);font-weight:800}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.stat-card{background:var(--off);border:1.5px solid var(--line);border-radius:var(--r3);padding:16px;transition:border-color .18s}
+.stat-card:hover{border-color:var(--line2)}
+.stat-icon{font-size:20px;margin-bottom:8px;display:block}
+.stat-lbl-sm{font-family:var(--M);font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.stat-val-sm{font-size:16px;font-weight:800;display:block;letter-spacing:-.3px}
+.stat-sub-sm{font-family:var(--M);font-size:10px;color:var(--gray);display:block;margin-top:4px}
+
+/* Before/After preview */
+.preview-row{display:none;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.preview-card{background:var(--off);border:1.5px solid var(--line);border-radius:var(--r3);overflow:hidden}
+.preview-lbl{font-family:var(--M);font-size:10px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;padding:9px 12px;border-bottom:1px solid var(--line)}
+.preview-inner{display:flex;align-items:center;justify-content:center;padding:10px;background:var(--card);min-height:120px}
+.preview-inner img{max-width:100%;max-height:200px;object-fit:contain;border:1px solid var(--line);border-radius:4px}
+
+/* Search banner */
+.search-banner{
+  border-radius:var(--r3);padding:14px 18px;margin-bottom:12px;
+  display:flex;align-items:flex-start;gap:12px;
+  font-family:var(--M);font-size:11px;line-height:1.6;
+}
+.search-banner.good{background:var(--g-l);border:1.5px solid rgba(74,222,128,.3);color:var(--green)}
+.search-banner.warn{background:var(--a-l);border:1.5px solid rgba(251,191,36,.3);color:var(--amber)}
+.search-banner.bad{background:var(--r-l);border:1.5px solid rgba(248,113,113,.3);color:var(--red)}
+.banner-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* Download button */
+.dl-btn{
+  width:100%;padding:17px;background:var(--lime);
+  border:none;border-radius:var(--r3);color:#0d0c0a;
+  font-family:var(--H);font-size:15px;font-weight:800;letter-spacing:-.3px;
+  cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .18s;margin-bottom:10px;
+  box-shadow:0 4px 18px rgba(200,241,53,.28);
+}
+.dl-btn:hover{background:#d4ff3d;transform:translateY(-2px);box-shadow:0 8px 28px rgba(200,241,53,.4)}
+.reset-btn{
+  width:100%;padding:13px;background:transparent;
+  border:1.5px solid var(--line2);border-radius:var(--r3);
+  color:var(--gray);font-family:var(--H);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .18s;
+}
+.reset-btn:hover{border-color:var(--lime);color:var(--lime)}
+
+/* ── Batch results ── */
+.batch-results{display:none;margin-top:32px}
+.batch-hero{
+  background:var(--off);border:1.5px solid var(--line);
+  border-radius:var(--r4);padding:40px 32px;text-align:center;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.batch-hero::before{
+  content:'';position:absolute;bottom:-60%;left:50%;transform:translateX(-50%);
+  width:600px;height:280px;
+  background:radial-gradient(ellipse,rgba(200,241,53,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.batch-big{font-size:72px;font-weight:800;letter-spacing:-3px;line-height:1;color:var(--lime)}
+.batch-lbl{font-family:var(--M);font-size:10px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+.batch-meta-row{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:20px}
+.batch-meta-item{text-align:center}
+.batch-meta-val{font-family:var(--H);font-size:20px;font-weight:800;display:block;letter-spacing:-.5px}
+.batch-meta-lbl{font-family:var(--M);font-size:10px;color:var(--gray);text-transform:uppercase;margin-top:2px;display:block}
+
+/* Batch table — compare-table style */
+.batch-table-wrap{
+  background:var(--card);border:1.5px solid var(--line);
+  border-radius:var(--r3);overflow:hidden;margin-bottom:14px;
+}
+.batch-table-header{
+  display:grid;grid-template-columns:1fr 110px 90px 90px;gap:0;
+  padding:12px 18px;background:var(--off);border-bottom:1.5px solid var(--line2);
+}
+.batch-th{font-family:var(--M);font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1.5px;font-weight:500}
+.batch-table-body{max-height:360px;overflow-y:auto}
+.batch-row{
+  display:grid;grid-template-columns:1fr 110px 90px 90px;gap:0;
+  padding:13px 18px;border-bottom:1px solid var(--line);
+  align-items:center;transition:background .14s;
+}
+.batch-row:last-child{border-bottom:none}
+.batch-row:hover{background:rgba(255,255,255,.03)}
+.batch-row.failed-row{opacity:.5}
+.batch-row-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+.batch-row-sizes{font-family:var(--M);font-size:11px;color:var(--gray)}
+.batch-row-sizes strong{color:var(--ink);font-weight:500}
+.batch-row-pct{font-family:var(--M);font-size:13px;font-weight:500;color:var(--green)}
+.batch-row-pct.bad{color:var(--gray)}
+.batch-row-dl{display:flex;justify-content:flex-end}
+.batch-dl-link{
+  font-family:var(--M);font-size:11px;color:var(--lime);
+  text-decoration:none;padding:4px 10px;
+  border:1px solid var(--l-b);border-radius:var(--r1);
+  transition:all .18s;white-space:nowrap;background:var(--l-l);
+}
+.batch-dl-link:hover{background:rgba(200,241,53,.2)}
+.batch-dl-link.err{color:var(--gray);border-color:var(--line);cursor:default;background:transparent}
+
+.zip-btn{
+  width:100%;padding:17px;background:var(--lime);border:none;
+  border-radius:var(--r3);color:#0d0c0a;font-family:var(--H);font-size:15px;font-weight:800;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .18s;margin-bottom:10px;letter-spacing:-.3px;
+  box-shadow:0 4px 24px rgba(200,241,53,.28);
+}
+.zip-btn:hover{background:#d4ff3d;transform:translateY(-2px);box-shadow:0 8px 32px rgba(200,241,53,.4)}
+.zip-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── Toast ── */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{
+  background:var(--card);border:1.5px solid var(--line2);border-radius:var(--r2);
+  padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;font-family:var(--H);font-weight:600;
+  box-shadow:0 8px 28px rgba(0,0,0,.6);animation:toastIn .3s cubic-bezier(.2,.9,.4,1.1);max-width:320px;
+}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--lime)}
+@keyframes toastIn{from{transform:translateX(420px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── Responsive ── */
+@media(max-width:960px){
+  .app-grid{grid-template-columns:1fr;gap:0;padding-top:28px}
+  .col-settings{position:static;margin-top:28px}
+  .col-hero-h{font-size:32px}
+}
+@media(max-width:640px){
+  .wrap{padding:0 16px}
+  .header{padding:28px 0 20px}
+  .stats-banner{flex-direction:column}
+  .stat-cell{border-right:none;border-bottom:1.5px solid var(--line)}
+  .stat-cell:last-child{border-bottom:none}
+  .profile-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-grid{grid-template-columns:1fr}
+  .preview-row{grid-template-columns:1fr}
+  .reduction-big{font-size:58px;letter-spacing:-2px}
+  .batch-big{font-size:48px;letter-spacing:-2px}
+  .mode-tab{font-size:12px;padding:10px 8px}
+  .col-hero-h{font-size:28px;letter-spacing:-1px}
+  .batch-table-header,.batch-row{grid-template-columns:1fr 80px 70px}
+  .batch-th:last-child,.batch-row-dl{display:none}
+  .ticker{display:none}
+}
+canvas{display:none}
+#fileInput{display:none}
+
+/* ── Accessibility ── */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{
+  position:absolute;top:-100px;left:16px;z-index:9999;
+  padding:10px 20px;background:var(--lime);color:#0d0c0a;
+  font-size:14px;font-weight:800;border-radius:var(--r2);
+  text-decoration:none;transition:top .15s;
+}
+.skip-link:focus{top:16px}
+:focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:var(--r1)}
+button:focus-visible,a:focus-visible{outline-offset:4px}
+.toggle:focus-visible{outline:2px solid var(--lime);outline-offset:4px;border-radius:12px}
+.drop-zone:focus-visible{outline:2px solid var(--lime);border-color:var(--lime);outline-offset:0}
+.mode-tab:focus-visible{outline-offset:2px}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" aria-label="NanoPress PDF Compressor">
+<div class="wrap">
+
+  <header class="header" role="banner">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">⚡</div>
+      <div><span class="logo-name"><span>Nano</span>Press</span><span class="logo-badge">PRO</span></div>
+    </div>
+    <p class="header-sub">Enterprise-grade PDF compression · 100% private · Client-side only · Up to 90% smaller</p>
+  </header>
+
+  <!-- Custom cursor — homepage style -->
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+  <!-- Ticker strip — homepage style -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-inner">
+      <span class="t-item">100% Client-Side</span>
+      <span class="t-item">Zero Server Uploads</span>
+      <span class="t-item">OCR in 12 Languages</span>
+      <span class="t-item">Batch Processing</span>
+      <span class="t-item">ZIP Download</span>
+      <span class="t-item">SEO Metadata Editor</span>
+      <span class="t-item">Real Cancel — Mid-Render</span>
+      <span class="t-item">JPEG Recompression</span>
+      <span class="t-item">Before / After Preview</span>
+      <span class="t-item">100% Client-Side</span>
+      <span class="t-item">Zero Server Uploads</span>
+      <span class="t-item">OCR in 12 Languages</span>
+      <span class="t-item">Batch Processing</span>
+      <span class="t-item">ZIP Download</span>
+      <span class="t-item">SEO Metadata Editor</span>
+      <span class="t-item">Real Cancel — Mid-Render</span>
+      <span class="t-item">JPEG Recompression</span>
+      <span class="t-item">Before / After Preview</span>
+    </div>
+  </div>
+
+
+  <div class="stats-banner" role="region" aria-label="Compression statistics">
+    <div class="stat-cell"><div class="stat-val" id="statSaved">0<span class="acc"> MB</span></div><div class="stat-lbl">Saved This Session</div></div>
+    <div class="stat-cell"><div class="stat-val" id="statFiles">0</div><div class="stat-lbl">Files Processed</div></div>
+    <div class="stat-cell"><div class="stat-val">100<span class="acc">%</span></div><div class="stat-lbl">Private — Zero Uploads</div></div>
+  </div>
+
+  <!-- ── TWO-COLUMN APP GRID ── -->
+  <div class="app-grid">
+
+    <!-- LEFT: primary workflow -->
+    <div class="col-main">
+
+      <div class="col-hero">
+        <h1 class="col-hero-h">Compress PDFs.<br><span class="hi">Keep everything that matters.</span></h1>
+        <p class="col-hero-sub">Text stays selectable. Links stay clickable. Metadata stays intact.<br>100% client-side — your files never leave your device.</p>
+        <div class="col-hero-pills">
+          <span class="col-hero-pill">✓ OCR</span>
+          <span class="col-hero-pill">✓ Batch + ZIP</span>
+          <span class="col-hero-pill">✓ SEO Metadata</span>
+          <span class="col-hero-pill">✓ Real Cancel</span>
+          <span class="col-hero-pill">✓ Image Recompression</span>
+        </div>
+      </div>
+
+      <div class="drop-zone" id="dropZone"
+           role="button" tabindex="0"
+           aria-label="Upload PDF files — click or press Enter to browse, or drag and drop files here">
+        <span class="drop-icon" aria-hidden="true">📄</span>
+        <h2>Drop PDFs here or click to browse</h2>
+        <p id="dzHint">Single or multiple files · Any size · No uploads — fully private</p>
+        <input type="file" id="fileInput" accept=".pdf" multiple aria-label="Select PDF files">
+      </div>
+
+      <div class="file-bar" id="fileBar" style="display:none" role="region" aria-label="Selected file">
+        <span style="font-size:26px" aria-hidden="true">📄</span>
+        <div class="file-info">
+          <div class="file-name" id="fileName" aria-live="polite">—</div>
+          <div class="file-size" id="fileSize" aria-live="polite">—</div>
+        </div>
+        <button class="btn-ghost" id="clearBtn" onclick="resetApp()" aria-label="Clear selected file and start over">✕ Clear</button>
+      </div>
+
+      <div class="batch-queue" id="batchQueue" style="display:none" role="region" aria-label="Batch file queue">
+        <div class="queue-header" id="queueHeaderBtn"
+             role="button" tabindex="0"
+             aria-expanded="true" aria-controls="queueList"
+             onclick="toggleQueue()">
+          <span>📦 Batch Queue</span>
+          <div class="queue-header-right">
+            <span class="queue-badge" id="queueCount" aria-live="polite">0 files</span>
+            <span aria-hidden="true" style="font-size:12px;color:var(--gray)">▼</span>
+          </div>
+        </div>
+        <div class="batch-overall-bar" role="progressbar" aria-label="Batch overall progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="batchOverallBar">
+          <div class="batch-overall-fill" id="batchOverallFill"></div>
+        </div>
+        <div class="queue-list" id="queueList" role="list"></div>
+      </div>
+
+      <div class="progress-section" id="progressSection" role="region" aria-label="Compression progress" aria-live="polite" tabindex="-1">
+        <div class="prog-header">
+          <span class="prog-label" id="progressLabel" aria-live="polite">Initializing...</span>
+          <span class="prog-pct" id="progressPercent" aria-live="off">0%</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="progressFill"
+               role="progressbar"
+               aria-label="Compression progress"
+               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="steps" id="stepsContainer" aria-live="polite" aria-relevant="additions text"></div>
+        <div id="batchStatusLine" class="batch-status-line" style="display:none" aria-live="polite"></div>
+        <div class="prog-footer">
+          <span class="prog-timer" id="progTimer" aria-live="off">0s elapsed</span>
+          <button class="cancel-btn" id="cancelBtn" onclick="cancelCompression()" aria-label="Cancel compression">✕ Cancel</button>
+        </div>
+      </div>
+
+      <!-- Single file results -->
+      <div class="results" id="results" role="region" aria-label="Compression results" tabindex="-1">
+        <div class="result-hero" aria-live="polite">
+          <div class="reduction-big" id="reductionPct" aria-label="Size reduction percentage">—</div>
+          <div class="reduction-lbl" aria-hidden="true">Size Reduction</div>
+          <div class="size-row">
+            <div class="size-box"><span class="size-val" id="originalSize">—</span><span class="size-lbl2">Original size</span></div>
+            <div class="size-arrow" aria-hidden="true">→</div>
+            <div class="size-box"><span class="size-val" id="compressedSize">—</span><span class="size-lbl2">Compressed size</span></div>
+          </div>
+        </div>
+        <div class="stat-grid" role="list" aria-label="Compression details">
+          <div class="stat-card" role="listitem"><span class="stat-icon" aria-hidden="true">📄</span><span class="stat-lbl-sm">Pages</span><span class="stat-val-sm" id="resultPages">—</span><span class="stat-sub-sm" id="resultMode">—</span></div>
+          <div class="stat-card" role="listitem"><span class="stat-icon" id="searchIcon" aria-hidden="true">🔍</span><span class="stat-lbl-sm">Searchability</span><span class="stat-val-sm" id="searchability">—</span><span class="stat-sub-sm" id="searchSub">—</span></div>
+          <div class="stat-card" role="listitem"><span class="stat-icon" aria-hidden="true">🔗</span><span class="stat-lbl-sm">Links</span><span class="stat-val-sm" id="linksStatus">—</span><span class="stat-sub-sm" id="linkSub">—</span></div>
+        </div>
+        <div class="preview-row" id="previewRow">
+          <div class="preview-card"><div class="preview-lbl" id="prevOrigLbl">📄 Original · Page 1</div><div class="preview-inner" id="prevOrig" role="img" aria-labelledby="prevOrigLbl"></div></div>
+          <div class="preview-card"><div class="preview-lbl" id="prevCompLbl">⚡ Compressed · Page 1</div><div class="preview-inner" id="prevComp" role="img" aria-labelledby="prevCompLbl"></div></div>
+        </div>
+        <div class="search-banner" id="searchBanner" role="status"><span class="banner-icon" id="bannerIcon" aria-hidden="true">ℹ️</span><div id="bannerText">—</div></div>
+        <a href="#" class="dl-btn" id="downloadBtn" aria-label="Download compressed PDF file">⬇️ Download Compressed PDF</a>
+        <button class="reset-btn" onclick="resetApp()" aria-label="Clear and compress another file">↩ Compress Another File</button>
+      </div>
+
+      <!-- Batch results -->
+      <div class="batch-results" id="batchResults" role="region" aria-label="Batch compression results" tabindex="-1">
+        <div class="batch-hero" aria-live="polite">
+          <div class="batch-big" id="batchTotalSaved" aria-label="Total space saved">—</div>
+          <div class="batch-lbl" aria-hidden="true">Total Space Saved</div>
+          <div class="batch-meta-row">
+            <div class="batch-meta-item"><span class="batch-meta-val" id="batchFileCount">—</span><span class="batch-meta-lbl">Files compressed</span></div>
+            <div class="batch-meta-item"><span class="batch-meta-val" id="batchAvgPct">—</span><span class="batch-meta-lbl">Avg reduction</span></div>
+            <div class="batch-meta-item"><span class="batch-meta-val" id="batchTimeTaken">—</span><span class="batch-meta-lbl">Total time</span></div>
+          </div>
+        </div>
+        <div class="batch-table-wrap" role="table" aria-label="Compressed files">
+          <div class="batch-table-header" role="row">
+            <div class="batch-th" role="columnheader">File</div>
+            <div class="batch-th" role="columnheader">Size</div>
+            <div class="batch-th" role="columnheader">Saved</div>
+            <div class="batch-th" role="columnheader">Download</div>
+          </div>
+          <div class="batch-table-body" id="batchTableBody" role="rowgroup"></div>
+        </div>
+        <button class="zip-btn" id="zipBtn" onclick="downloadAllAsZip()" aria-label="Download all compressed files as a single ZIP archive">📦 Download All as ZIP</button>
+        <button class="reset-btn" onclick="resetApp()" aria-label="Clear and compress another batch">↩ Compress Another Batch</button>
+      </div>
+
+    </div><!-- /col-main -->
+
+    <!-- RIGHT: settings + action -->
+    <div class="col-settings">
+
+      <div class="settings-eyebrow">
+        <span>Settings</span>
+      </div>
+
+      <div class="mode-tabs" role="tablist" aria-label="Compression mode">
+        <button class="mode-tab active" role="tab" aria-selected="true"  id="tab-safe"     aria-controls="controls-panel" data-mode="safe"     onclick="setMode('safe')">🛡️ Safe</button>
+        <button class="mode-tab"        role="tab" aria-selected="false" id="tab-balanced"  aria-controls="controls-panel" data-mode="balanced"  onclick="setMode('balanced')">⚖️ Balanced</button>
+        <button class="mode-tab"        role="tab" aria-selected="false" id="tab-max"       aria-controls="controls-panel" data-mode="max"       onclick="setMode('max')">🔥 Max</button>
+      </div>
+
+      <div class="controls-panel" id="controls-panel">
+        <div class="ctrl-group">
+          <label class="ctrl-label" for="qualitySlider">Compression Quality</label>
+          <div class="slider-row">
+            <input type="range" id="qualitySlider" min="0.3" max="0.95" step="0.01" value="0.75"
+                   aria-label="Compression quality" aria-valuetext="75 percent">
+            <span class="slider-val" id="qualityValue" aria-hidden="true">75%</span>
+          </div>
+          <div class="est-hint" id="estHint" style="display:none" aria-live="polite"></div>
+        </div>
+        <div class="ctrl-group" id="profileGroup" style="display:none">
+          <span class="ctrl-label">Quality Profile</span>
+          <div class="profile-grid">
+            <button class="profile-btn" data-profile="archive" onclick="setProfile('archive')"><span class="pname">🗄️ Archive</span><span class="pdesc">Lossless</span><span class="predu">~20–40%</span></button>
+            <button class="profile-btn" data-profile="print" onclick="setProfile('print')"><span class="pname">🖨️ Print</span><span class="pdesc">150 DPI</span><span class="predu">~40–60%</span></button>
+            <button class="profile-btn active" data-profile="share" onclick="setProfile('share')"><span class="pname">📤 Share</span><span class="pdesc">96 DPI</span><span class="predu">~60–80%</span></button>
+            <button class="profile-btn" data-profile="web" onclick="setProfile('web')"><span class="pname">🌐 Web</span><span class="pdesc">72 DPI</span><span class="predu">~75–90%</span></button>
+          </div>
+        </div>
+        <div class="ctrl-group" id="ocrGroup" style="display:none">
+          <span class="ctrl-label" id="ocrGroupLabel">OCR Text Layer</span>
+          <div class="ocr-row">
+            <div class="ocr-left">
+              <div class="ocr-title" id="ocrToggleLabel">Add OCR text layer</div>
+              <div class="ocr-sub" id="ocrToggleDesc">Makes text selectable &amp; Google-crawlable</div>
+            </div>
+            <div class="toggle on" id="ocrToggle"
+                 role="switch" aria-checked="true"
+                 tabindex="0"
+                 aria-labelledby="ocrToggleLabel"
+                 aria-describedby="ocrToggleDesc"
+                 onclick="toggleOCR(event)"></div>
+          </div>
+          <div class="lang-row" id="langRow">
+            <label class="lang-label" for="ocrLang">OCR Language</label>
+            <select class="lang-select" id="ocrLang" aria-label="OCR recognition language">
+              <option value="eng">English</option><option value="spa">Spanish</option>
+              <option value="fra">French</option><option value="deu">German</option>
+              <option value="ita">Italian</option><option value="por">Portuguese</option>
+              <option value="nld">Dutch</option><option value="chi_sim">Chinese (Simplified)</option>
+              <option value="jpn">Japanese</option><option value="ara">Arabic</option>
+              <option value="kor">Korean</option><option value="rus">Russian</option>
+            </select>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <label class="ctrl-label" for="pageRange">Page Range</label>
+          <input type="text" class="page-range-input" id="pageRange"
+                 placeholder="All pages — or type a range"
+                 aria-describedby="pageRangeHint">
+          <span class="range-hint" id="pageRangeHint">e.g. 1-5 · 1,3,7 · 1-5,8,11-20</span>
+        </div>
+      </div>
+
+      <div class="meta-panel" id="metaPanel">
+        <div class="meta-header" id="metaHeaderBtn"
+             role="button" tabindex="0"
+             aria-expanded="false" aria-controls="metaBody"
+             onclick="toggleMeta()">
+          <div class="meta-header-left">
+            <span style="font-size:18px" aria-hidden="true">🏷️</span>
+            <div><div class="meta-title">SEO Metadata</div><div class="meta-sub-txt">Title, description &amp; keywords</div></div>
+          </div>
+          <span class="meta-chevron" aria-hidden="true">▼</span>
+        </div>
+        <div class="meta-body" id="metaBody">
+          <div class="meta-field"><label for="metaTitle">Document Title</label><input type="text" id="metaTitle" placeholder="e.g. Annual Report 2025" aria-describedby="metaNote"></div>
+          <div class="meta-field"><label for="metaAuthor">Author</label><input type="text" id="metaAuthor" placeholder="e.g. Jane Smith"></div>
+          <div class="meta-field"><label for="metaSubject">Subject / Description</label><textarea id="metaSubject" rows="2" placeholder="Description for Google search results..."></textarea></div>
+          <div class="meta-field"><label for="metaKeywords">Keywords (comma separated)</label><input type="text" id="metaKeywords" placeholder="report, 2025, finance"></div>
+          <div class="meta-note" id="metaNote">💡 Sets PDF internal metadata — affects Google search snippets.</div>
+        </div>
+      </div>
+
+      <button class="compress-btn" id="compressBtn" onclick="startCompression()"><span>⚡</span> <span id="compressBtnLabel">Compress PDF</span></button>
+
+    </div><!-- /col-settings -->
+
+  </div><!-- /app-grid -->
+
+</div><!-- /wrap -->
+</main>
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
+<canvas id="renderCanvas" aria-hidden="true"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@4.1.4/dist/tesseract.min.js"></script>
+<script>
+const PROFILES={archive:{dpi:150,quality:0.92},print:{dpi:150,quality:0.85},share:{dpi:96,quality:0.75},web:{dpi:72,quality:0.60}};
+
+let appState={
+  files:[],fileStatuses:[],
+  currentFile:null,
+  mode:'safe',profile:'share',
+  ocrEnabled:true,ocrLang:'eng',
+  ocrSucceeded:false,
+  actualMode:'safe',
+  processing:false,cancelFlag:false,
+  compressedBlob:null,originalThumb:null,
+  pdfLibCompatible:true,
+  batchResults:[],
+  batchBlobUrls:[],
+  batchStartTime:0,
+  _serverStats:null,      // metadata from last server response headers
+  _serverAbort:null,      // AbortController for in-flight fetch
+  _singleBlobUrl:null,    // single-file download URL — revoked on reset
+  stats:{totalSaved:0,filesProcessed:0}
+};
+
+// ── currentRenderTask: used for real mid-render cancellation ──────────
+let currentRenderTask=null;
+
+const DOM={
+  dropZone:document.getElementById('dropZone'),fileInput:document.getElementById('fileInput'),
+  fileBar:document.getElementById('fileBar'),fileName:document.getElementById('fileName'),fileSize:document.getElementById('fileSize'),
+  batchQueue:document.getElementById('batchQueue'),queueList:document.getElementById('queueList'),queueCount:document.getElementById('queueCount'),
+  compressBtn:document.getElementById('compressBtn'),compressBtnLabel:document.getElementById('compressBtnLabel'),
+  progressSection:document.getElementById('progressSection'),
+  results:document.getElementById('results'),batchResults:document.getElementById('batchResults'),
+  qualitySlider:document.getElementById('qualitySlider'),qualityValue:document.getElementById('qualityValue'),
+  profileGroup:document.getElementById('profileGroup'),ocrGroup:document.getElementById('ocrGroup'),
+  ocrToggle:document.getElementById('ocrToggle'),ocrLang:document.getElementById('ocrLang'),langRow:document.getElementById('langRow'),
+  pageRange:document.getElementById('pageRange'),
+  metaTitle:document.getElementById('metaTitle'),metaAuthor:document.getElementById('metaAuthor'),
+  metaSubject:document.getElementById('metaSubject'),metaKeywords:document.getElementById('metaKeywords'),
+  toastContainer:document.getElementById('toastContainer'),renderCanvas:document.getElementById('renderCanvas'),
+  progTimer:document.getElementById('progTimer'),estHint:document.getElementById('estHint'),
+  batchStatusLine:document.getElementById('batchStatusLine'),
+  batchOverallFill:document.getElementById('batchOverallFill')
+};
+
+// ── Worker (blob-fetch for sandbox compat) ────────────────────────────
+(function(){
+  const CDN='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  fetch(CDN).then(r=>r.blob()).then(b=>{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);}).catch(()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=CDN;});
+})();
+
+if('ontouchstart' in window||navigator.maxTouchPoints>0){const h=document.getElementById('dzHint');if(h)h.textContent='Tap to choose · Multiple files · 100% private';}
+
+// ── Timer ─────────────────────────────────────────────────────────────
+let timerInterval=null,timerStart=0;
+function startTimer(){timerStart=Date.now();clearInterval(timerInterval);timerInterval=setInterval(()=>{const s=Math.floor((Date.now()-timerStart)/1000);if(DOM.progTimer)DOM.progTimer.textContent=s+'s elapsed';},1000);}
+function stopTimer(){clearInterval(timerInterval);const s=Math.floor((Date.now()-timerStart)/1000);if(DOM.progTimer)DOM.progTimer.textContent='Done in '+s+'s';return s;}
+
+// ── Utilities ─────────────────────────────────────────────────────────
+function formatBytes(b){if(!b||b<0)return '0 B';const s=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(1024));return parseFloat((b/Math.pow(1024,i)).toFixed(2))+' '+s[i];}
+function showToast(msg,type='info'){const t=document.createElement('div');t.className=`toast ${type}`;const ic=type==='success'?'✓':type==='error'?'✕':'ℹ';t.innerHTML=`<span>${ic}</span>`;const sp=document.createElement('span');sp.textContent=msg;t.appendChild(sp);DOM.toastContainer.appendChild(t);setTimeout(()=>t.remove(),4500);}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function parsePageRange(rangeStr,totalPages){if(!rangeStr||rangeStr.trim()===''||rangeStr.trim()==='all')return Array.from({length:totalPages},(_,i)=>i+1);const pages=new Set();for(const part of rangeStr.split(',')){const t=part.trim();if(t.includes('-')){const[a,b]=t.split('-').map(Number);const lo=Math.min(a,b),hi=Math.max(a,b);for(let i=lo;i<=Math.min(hi,totalPages);i++)if(i>=1)pages.add(i);}else{const n=Number(t);if(n>=1&&n<=totalPages)pages.add(n);}}const arr=Array.from(pages).sort((a,b)=>a-b);return arr.length?arr:Array.from({length:totalPages},(_,i)=>i+1);}
+function updateStatsDisplay(){const e1=document.getElementById('statSaved'),e2=document.getElementById('statFiles');if(e1)e1.textContent=(appState.stats.totalSaved/1048576).toFixed(1);if(e2)e2.textContent=appState.stats.filesProcessed;}
+function updateEstimate(){if(!appState.currentFile||(appState.mode!=='max'&&appState.mode!=='balanced')){if(DOM.estHint)DOM.estHint.style.display='none';return;}const q=parseFloat(DOM.qualitySlider.value);const pct=0.40+(1-q)*0.40;const est=Math.round(appState.currentFile.size*(1-pct));if(DOM.estHint){DOM.estHint.style.display='block';DOM.estHint.innerHTML=`Estimated output: <strong>~${formatBytes(est)}</strong> <span style="opacity:.6">(~${Math.round(pct*100)}% reduction)</span>`;}}
+
+// ── Thumbnail ─────────────────────────────────────────────────────────
+async function captureThumb(srcBytes,maxW=240){try{const d=await pdfjsLib.getDocument({data:srcBytes,verbosity:0}).promise;const pg=await d.getPage(1);const vp=pg.getViewport({scale:1});const scale=maxW/vp.width;const rvp=pg.getViewport({scale});const c=document.createElement('canvas');c.width=Math.ceil(rvp.width);c.height=Math.ceil(rvp.height);const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:ctx,viewport:rvp}).promise;const thumb=c.toDataURL('image/jpeg',0.85);pg.cleanup();return thumb;}catch(e){return null;}}
+
+// ── File loading ──────────────────────────────────────────────────────
+async function loadFiles(files){
+  const pdfs=Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.pdf'));
+  if(pdfs.length===0){showToast('Please select PDF files','error');return;}
+  appState.files=pdfs;
+  appState.fileStatuses=pdfs.map(()=>'pending');
+  appState.batchResults=[];
+  if(pdfs.length===1){
+    DOM.batchQueue.style.display='none';
+    await loadSingleFile(pdfs[0]);
+    DOM.compressBtnLabel.textContent='Compress PDF';
+  } else {
+    updateQueueDisplay();
+    DOM.batchQueue.style.display='block';
+    DOM.queueList.style.display='block';
+    await loadSingleFile(pdfs[0]);
+    showToast(`${pdfs.length} files queued — will auto-process all`,'success');
+    DOM.compressBtnLabel.textContent=`Compress All ${pdfs.length} Files`;
+  }
+}
+
+async function loadSingleFile(file){
+  appState.currentFile=file;
+  appState.originalThumb=null;
+  appState.pdfLibCompatible=true;
+  DOM.fileName.textContent=file.name;
+  DOM.fileSize.textContent=formatBytes(file.size)+' · Ready to compress';
+  DOM.fileBar.style.display='flex';
+  DOM.dropZone.style.display='none';
+  DOM.results.style.display='none';
+  DOM.batchResults.style.display='none';
+  DOM.metaTitle.value=file.name.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');
+  file.arrayBuffer().then(buf=>{captureThumb(new Uint8Array(buf)).then(t=>{appState.originalThumb=t;});}).catch(()=>{});
+  await loadExistingMetadata(file);
+  updateEstimate();
+}
+
+async function loadExistingMetadata(file){
+  try{
+    const buf=await file.arrayBuffer();
+    const pdf=await Promise.race([PDFLib.PDFDocument.load(buf,{ignoreEncryption:true,updateMetadata:false}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))]);
+    appState.pdfLibCompatible=true;
+    if(pdf.getTitle())DOM.metaTitle.value=pdf.getTitle();
+    if(pdf.getAuthor())DOM.metaAuthor.value=pdf.getAuthor();
+    if(pdf.getSubject())DOM.metaSubject.value=pdf.getSubject();
+    const kw=pdf.getKeywords();if(kw&&kw.length)DOM.metaKeywords.value=kw.join(', ');
+  }catch(e){
+    appState.pdfLibCompatible=false;
+    if(appState.mode==='safe'||appState.mode==='balanced'){showToast('Complex PDF detected — Maximum mode recommended','info');setMode('max');}
+  }
+}
+
+function updateQueueDisplay(){
+  DOM.queueCount.textContent=`${appState.files.length} file${appState.files.length!==1?'s':''}`;
+  // Build a map of filename → error for failed files
+  const errorMap={};
+  appState.batchResults.forEach(r=>{if(r.error)errorMap[r.file.name]=r.error;});
+  DOM.queueList.innerHTML=appState.files.map((f,i)=>{
+    const st=appState.fileStatuses[i]||'pending';
+    const stLabel=st==='pending'?'Pending':st==='processing'?'⚡ Processing…':st==='done'?'✓ Done':'✕ Failed';
+    const canRemove=st==='pending'&&!appState.processing;
+    const errMsg=st==='failed'&&errorMap[f.name]?errorMap[f.name]:'';
+    return `<div class="queue-item" role="listitem" aria-label="${escapeHtml(f.name)}, ${formatBytes(f.size)}, ${stLabel}">
+      <span class="queue-item-name" ${errMsg?`title="${escapeHtml(errMsg)}"`:''}>${escapeHtml(f.name)}</span>
+      <span class="queue-item-size" aria-hidden="true">${formatBytes(f.size)}</span>
+      <span class="queue-status ${st}" aria-live="polite" ${errMsg?`title="${escapeHtml(errMsg)}"`:''}>${stLabel}</span>
+      ${canRemove?`<button class="queue-remove" onclick="removeFromQueue(${i})" aria-label="Remove ${escapeHtml(f.name)} from queue">✕</button>`:'<span style="width:20px" aria-hidden="true"></span>'}
+    </div>`;
+  }).join('');
+}
+
+function removeFromQueue(i){
+  appState.files.splice(i,1);appState.fileStatuses.splice(i,1);
+  if(appState.files.length===0){resetApp();return;}
+  updateQueueDisplay();
+  if(appState.files.length===1){DOM.compressBtnLabel.textContent='Compress PDF';DOM.batchQueue.style.display='none';}
+  else DOM.compressBtnLabel.textContent=`Compress All ${appState.files.length} Files`;
+  loadSingleFile(appState.files[0]);
+}
+
+function toggleQueue(){
+  const list=DOM.queueList;
+  const btn=document.getElementById('queueHeaderBtn');
+  const isVisible=list.style.display!=='none';
+  list.style.display=isVisible?'none':'block';
+  if(btn) btn.setAttribute('aria-expanded',isVisible?'false':'true');
+}
+// Queue header keyboard
+document.getElementById('queueHeaderBtn').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleQueue();}
+});
+
+// ── Mode / profile / OCR ──────────────────────────────────────────────
+function setMode(mode){
+  appState.mode=mode;
+  document.querySelectorAll('.mode-tab').forEach(t=>{
+    const isActive=t.dataset.mode===mode;
+    t.classList.toggle('active',isActive);
+    t.setAttribute('aria-selected',isActive?'true':'false');
+  });
+  const showMax=mode==='max'||mode==='balanced';
+  DOM.profileGroup.style.display=showMax?'block':'none';
+  DOM.ocrGroup.style.display=mode==='max'?'block':'none';
+  if(DOM.estHint)DOM.estHint.style.display='none';
+  updateEstimate();
+}
+
+// Mode tab arrow key navigation
+document.querySelector('.mode-tabs').addEventListener('keydown',e=>{
+  const tabs=[...document.querySelectorAll('.mode-tab')];
+  const idx=tabs.indexOf(document.activeElement);
+  if(idx===-1)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){
+    e.preventDefault();
+    const next=tabs[(idx+1)%tabs.length];
+    next.focus();next.click();
+  } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
+    e.preventDefault();
+    const prev=tabs[(idx-1+tabs.length)%tabs.length];
+    prev.focus();prev.click();
+  }
+});
+function setProfile(p){appState.profile=p;document.querySelectorAll('.profile-btn').forEach(b=>b.classList.toggle('active',b.dataset.profile===p));const prof=PROFILES[p];DOM.qualitySlider.value=prof.quality;DOM.qualityValue.textContent=Math.round(prof.quality*100)+'%';updateEstimate();}
+DOM.qualitySlider.addEventListener('input',()=>{
+  const pct=Math.round(DOM.qualitySlider.value*100);
+  DOM.qualityValue.textContent=pct+'%';
+  DOM.qualitySlider.setAttribute('aria-valuetext',pct+' percent');
+  updateEstimate();
+});
+function toggleOCR(e){
+  e.stopPropagation();
+  appState.ocrEnabled=!appState.ocrEnabled;
+  DOM.ocrToggle.classList.toggle('on',appState.ocrEnabled);
+  DOM.ocrToggle.setAttribute('aria-checked',appState.ocrEnabled?'true':'false');
+  if(DOM.langRow)DOM.langRow.style.display=appState.ocrEnabled?'flex':'none';
+}
+// OCR toggle keyboard: Enter/Space activate
+DOM.ocrToggle.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleOCR(e);}
+});
+DOM.ocrLang.addEventListener('change',()=>{appState.ocrLang=DOM.ocrLang.value;});
+function toggleMeta(){
+  const panel=document.getElementById('metaPanel');
+  const btn=document.getElementById('metaHeaderBtn');
+  const isOpen=panel.classList.toggle('open');
+  if(btn) btn.setAttribute('aria-expanded',isOpen?'true':'false');
+}
+// Metadata header keyboard: Enter/Space activate
+document.getElementById('metaHeaderBtn').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleMeta();}
+});
+
+// ── CANCEL — aborts both browser render tasks and server requests ─────
+function cancelCompression(){
+  appState.cancelFlag=true;
+  if(currentRenderTask){
+    try{currentRenderTask.cancel();}catch(e){}
+    currentRenderTask=null;
+  }
+  // Abort any in-flight server request (AbortController)
+  if(appState._serverAbort){
+    try{appState._serverAbort.abort();}catch(e){}
+    appState._serverAbort=null;
+  }
+  showToast('Cancelling — stopping after current operation…','info');
+}
+
+// ── Progress ──────────────────────────────────────────────────────────
+function initSteps(steps){document.getElementById('stepsContainer').innerHTML=steps.map((s,i)=>`<div class="step" id="step${i}"><div class="step-dot"></div><span>${s}</span></div>`).join('');}
+function stepActive(i){const e=document.getElementById(`step${i}`);if(e){e.classList.add('active');e.classList.remove('done');}}
+function stepDone(i){const e=document.getElementById(`step${i}`);if(e){e.classList.remove('active');e.classList.add('done');}}
+function updateProgress(pct,label){
+  const fill=document.getElementById('progressFill');
+  const rounded=Math.round(pct);
+  fill.style.width=pct+'%';
+  fill.setAttribute('aria-valuenow',rounded);
+  document.getElementById('progressPercent').textContent=rounded+'%';
+  document.getElementById('progressLabel').textContent=label;
+}
+
+// ── Server-side compression ───────────────────────────────────────────
+// ── Server config & health ────────────────────────────────────────────
+// Auto-detects environment:
+// - localhost → hits your local uvicorn
+// - any other hostname → hits your deployed Render backend
+// Update RENDER_URL to your actual Render service URL after deploying
+const RENDER_URL = 'https://nanopress-backend.onrender.com'; // ← update this
+const API_BASE = (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.protocol === 'file:'
+) ? 'http://localhost:8000' : RENDER_URL;
+
+// Visible server status banner injected above the compress button
+function showServerBanner(online) {
+  let el = document.getElementById('serverBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'serverBanner';
+    el.style.cssText = `
+      border-radius:var(--r2);padding:12px 16px;margin-bottom:16px;
+      font-family:var(--M);font-size:11px;line-height:1.7;
+      display:flex;align-items:flex-start;gap:10px;
+    `;
+    // Insert before compress button in the settings column
+    const btn = document.getElementById('compressBtn');
+    if (btn && btn.parentNode) btn.parentNode.insertBefore(el, btn);
+  }
+  if (online) {
+    el.style.cssText += 'background:var(--g-l);border:1px solid rgba(74,222,128,.3);color:var(--green);';
+    el.innerHTML = '<span style="font-size:16px;flex-shrink:0">✓</span><span><strong>Server online</strong> · Ghostscript compression ready</span>';
+    el.style.display = 'flex';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 3000);
+  } else {
+    el.style.cssText = `
+      border-radius:var(--r2);padding:12px 16px;margin-bottom:16px;
+      font-family:var(--M);font-size:11px;line-height:1.7;
+      display:flex;align-items:flex-start;gap:10px;
+      background:var(--r-l);border:1px solid rgba(248,113,113,.3);color:var(--red);
+    `;
+    el.innerHTML = `
+      <span style="font-size:16px;flex-shrink:0;margin-top:1px">✕</span>
+      <div>
+        <strong>Server not running</strong><br>
+        Start it with:<br>
+        <code style="background:rgba(0,0,0,.25);padding:3px 7px;border-radius:4px;display:inline-block;margin-top:4px">
+          cd nanopress-backend &amp;&amp; uvicorn main:app --reload --port 8000
+        </code>
+      </div>`;
+    el.style.display = 'flex';
+  }
+}
+
+async function checkServer() {
+  try {
+    const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    const data = await r.json();
+    showServerBanner(true);
+    if (!data.ghostscript) showToast('Ghostscript not found on server — install it first', 'error');
+    return true;
+  } catch (e) {
+    showServerBanner(false);
+    return false;
+  }
+}
+
+// Check on page load so the user sees status immediately
+window.addEventListener('DOMContentLoaded', () => setTimeout(checkServer, 800));
+
+async function compressViaServer(file,pageRange){
+  // Build multipart form with all settings from current app state
+  const fd=new FormData();
+  fd.append('file',file);
+  fd.append('mode',appState.mode);
+  fd.append('quality',DOM.qualitySlider.value);
+  fd.append('ocr',appState.ocrEnabled&&appState.mode==='max'?'true':'false');
+  fd.append('ocr_lang',appState.ocrLang);
+  fd.append('page_range',pageRange||'');
+  fd.append('title',DOM.metaTitle.value.trim());
+  fd.append('author',DOM.metaAuthor.value.trim());
+  fd.append('subject',DOM.metaSubject.value.trim());
+  fd.append('keywords',DOM.metaKeywords.value.trim());
+
+  // Fake progress animation — Ghostscript doesn't report per-step progress
+  initSteps(['Uploading PDF','Server compressing','Downloading result']);
+  let si=0;
+  stepActive(si); updateProgress(5,'Uploading PDF...');
+  let fakeP=8;
+  const fakeInterval=setInterval(()=>{
+    if(fakeP<80){
+      fakeP+=0.8+Math.random()*1.2;
+      const label=fakeP<30?'Uploading PDF...':fakeP<65?'Server compressing...':'Almost done...';
+      updateProgress(Math.min(fakeP,80),label);
+      if(fakeP>=30&&si===0){stepDone(si++);stepActive(si);}
+    }
+  },350);
+
+  // AbortController so cancel button works mid-request
+  const ctrl=new AbortController();
+  appState._serverAbort=ctrl;
+
+  let response;
+  try{
+    response=await fetch(`${API_BASE}/compress`,{
+      method:'POST',
+      body:fd,
+      signal:ctrl.signal,
+    });
+  }catch(e){
+    clearInterval(fakeInterval);
+    appState._serverAbort=null;
+    if(e.name==='AbortError') throw new Error('cancelled');
+    // Show the server banner again so user knows why it failed
+    showServerBanner(false);
+    throw new Error(`Server unreachable — is uvicorn running on port 8000?`);
+  }finally{
+    appState._serverAbort=null;
+  }
+
+  clearInterval(fakeInterval);
+
+  if(!response.ok){
+    let detail=`Server error (HTTP ${response.status})`;
+    try{const j=await response.json();detail=j.detail||detail;}catch(e){}
+    throw new Error(detail);
+  }
+
+  stepDone(si++);stepActive(si);updateProgress(88,'Downloading result...');
+
+  // Pull metadata out of headers before reading body
+  appState._serverStats={
+    originalSize:  parseInt(response.headers.get('X-Original-Size')||'0'),
+    compressedSize:parseInt(response.headers.get('X-Compressed-Size')||'0'),
+    reductionPct:  parseFloat(response.headers.get('X-Reduction-Pct')||'0'),
+    pages:         parseInt(response.headers.get('X-Pages')||'0'),
+    actualMode:    response.headers.get('X-Actual-Mode')||appState.mode,
+    ocrRan:        response.headers.get('X-OCR-Ran')==='true',
+    hasText:       response.headers.get('X-Has-Text')==='true',
+  };
+
+  const blob=await response.blob();
+  stepDone(si);updateProgress(100,'Complete!');
+  return blob;
+}
+
+// ══════════════════════════════════════════════════════════
+// MAIN ENTRY — handles both single and batch
+// ══════════════════════════════════════════════════════════
+function lockControls(lock){
+  const opacity=lock?'0.45':'1', pointer=lock?'none':'';
+  document.querySelector('.mode-tabs').style.cssText=`opacity:${opacity};pointer-events:${pointer}`;
+  document.querySelector('.controls-panel').style.cssText=`opacity:${opacity};pointer-events:${pointer}`;
+  // Lock/unlock the Clear button in the file bar
+  const clearBtn=document.getElementById('clearBtn');
+  if(clearBtn){
+    clearBtn.disabled=lock;
+    clearBtn.setAttribute('aria-disabled',lock?'true':'false');
+  }
+  // aria-disabled on mode tabs so screen readers know they're inert
+  document.querySelectorAll('.mode-tab').forEach(t=>t.setAttribute('aria-disabled',lock?'true':'false'));
+}
+
+async function startCompression(){
+  if(appState.processing){showToast('Compression already in progress','info');return;}
+  if(!appState.currentFile&&appState.files.length===0){showToast('Please select a PDF file first','error');return;}
+
+  // Check server is reachable before starting — fail fast with a clear message
+  const online = await checkServer();
+  if(!online){
+    showToast('Cannot compress — start the NanoPress server first','error');
+    return;
+  }
+
+  appState.processing=true;appState.cancelFlag=false;currentRenderTask=null;
+  DOM.compressBtn.disabled=true;
+  lockControls(true);
+  DOM.progressSection.style.display='block';
+  DOM.results.style.display='none';DOM.batchResults.style.display='none';
+  if(DOM.progTimer)DOM.progTimer.textContent='0s elapsed';
+  startTimer();
+  // Move focus to progress section so screen readers announce it
+  DOM.progressSection.focus();
+  const isBatch=appState.files.length>1;
+  if(isBatch){
+    await runBatchQueue();
+  } else {
+    await runSingleFile(appState.currentFile);
+  }
+  appState.processing=false;DOM.compressBtn.disabled=false;
+  lockControls(false);
+}
+
+// ── Single file compression ───────────────────────────────────────────
+async function runSingleFile(file){
+  appState.ocrSucceeded=false;
+  appState._serverStats=null;
+  DOM.batchStatusLine.style.display='none';
+  const pageRange=DOM.pageRange.value;
+  try{
+    const blob=await compressViaServer(file,pageRange);
+    stopTimer();
+    appState.compressedBlob=blob;
+    const s=appState._serverStats;
+    const saved=s?(s.originalSize-s.compressedSize):Math.max(0,file.size-blob.size);
+    appState.stats.totalSaved+=Math.max(0,saved);
+    appState.stats.filesProcessed++;
+    updateStatsDisplay();
+    await showSingleResults(file,blob);
+  }catch(err){
+    stopTimer();console.error('Compression error:',err);
+    DOM.progressSection.style.display='none';
+    if(err.message==='cancelled')showToast('Compression cancelled','info');
+    else showToast(`Failed: ${err.message||'Unknown error'}`,'error');
+  }
+}
+
+// ── REAL BATCH — auto-processes every file, then shows summary ─────────
+async function runBatchQueue(){
+  appState.batchResults=[];
+  appState.batchStartTime=Date.now();
+  const files=[...appState.files];  // snapshot so removes mid-run don't break indexing
+  const pageRange=DOM.pageRange.value;
+  DOM.batchStatusLine.style.display='block';
+  DOM.batchQueue.style.display='block';
+  DOM.queueList.style.display='block';
+
+  for(let i=0;i<files.length;i++){
+    if(appState.cancelFlag){
+      showToast(`Batch cancelled after ${i} of ${files.length} files`,'info');
+      break;
+    }
+    const file=files[i];
+    appState.currentFile=file;
+    appState.ocrSucceeded=false;
+    appState.pdfLibCompatible=true;
+    appState._serverStats=null;  // reset per-file so stale headers never bleed across
+
+    // Update batch status line and progress bar
+    DOM.batchStatusLine.textContent=`File ${i+1} of ${files.length}: ${file.name}`;
+    DOM.batchOverallFill.style.width=((i/files.length)*100)+'%';
+    appState.fileStatuses[i]='processing';
+    updateQueueDisplay();
+
+    // Scroll processing item into view
+    try{document.querySelectorAll('.queue-item')[i]?.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
+
+    // Load metadata for this file (non-blocking metadata, don't switch modes)
+    try{
+      const buf=await file.arrayBuffer();
+      const pdf=await Promise.race([PDFLib.PDFDocument.load(buf,{ignoreEncryption:true,updateMetadata:false}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('to')),3000))]);
+      appState.pdfLibCompatible=true;
+      // Use filename as title for each file in batch
+      DOM.metaTitle.value=file.name.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');
+    }catch(e){appState.pdfLibCompatible=false;DOM.metaTitle.value=file.name.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');}
+
+    // Reset step display for each file
+    updateProgress(0,'Starting…');
+
+    try{
+      const blob=await compressViaServer(file,pageRange);
+      const s=appState._serverStats;
+      const saved=s?(s.originalSize-s.compressedSize):Math.max(0,file.size-blob.size);
+      const pct=s?s.reductionPct:((saved/file.size)*100).toFixed(1);
+      appState.stats.totalSaved+=Math.max(0,saved);
+      appState.stats.filesProcessed++;
+      appState.fileStatuses[i]='done';
+      appState.batchResults.push({file,blob,pct:parseFloat(pct),mode:appState.mode,ocrSucceeded:appState.ocrSucceeded,error:null});
+    }catch(err){
+      if(err.message==='cancelled'){
+        appState.fileStatuses[i]='failed';
+        updateQueueDisplay();
+        break;
+      }
+      console.error(`Failed on ${file.name}:`,err);
+      appState.fileStatuses[i]='failed';
+      // Store error message so queue display can show it
+      appState.batchResults.push({file,blob:null,pct:0,mode:appState.mode,ocrSucceeded:false,error:err.message||'Unknown error'});
+      // If it's a server-offline error, no point continuing the batch
+      if(err.message.includes('unreachable')||err.message.includes('8000')){
+        showServerBanner(false);
+        showToast('Server offline — batch stopped','error');
+        // Mark remaining files as failed too
+        for(let j=i+1;j<files.length;j++){appState.fileStatuses[j]='failed';}
+        updateQueueDisplay();
+        break;
+      }
+    }
+    updateStatsDisplay();
+    updateQueueDisplay();
+    await sleep(80); // brief pause so UI updates are visible
+  }
+
+  // Final overall bar
+  const completed=appState.batchResults.filter(r=>!r.error).length;
+  DOM.batchOverallFill.style.width='100%';
+  stopTimer();
+  DOM.progressSection.style.display='none';
+
+  if(appState.batchResults.length>0){
+    await showBatchResults();
+  }
+}
+
+// ── Single results display ────────────────────────────────────────────
+async function showSingleResults(file,blob){
+  // Use server header metadata when available — more reliable than re-reading the blob
+  const s=appState._serverStats;
+  const orig=s?s.originalSize:file.size;
+  const comp=s?s.compressedSize:blob.size;
+  const pct=s?s.reductionPct.toFixed(1):((orig-comp)/orig*100).toFixed(1);
+  const actualMode=s?s.actualMode:appState.mode;
+  const ocrRan=s?s.ocrRan:false;
+
+  document.getElementById('reductionPct').textContent=pct+'%';
+  document.getElementById('originalSize').textContent=formatBytes(orig);
+  document.getElementById('compressedSize').textContent=formatBytes(comp);
+  document.getElementById('resultPages').textContent=s&&s.pages?(s.pages+(s.pages===1?' page':' pages')):'—';
+  document.getElementById('resultMode').textContent=
+    actualMode==='safe'?'Stream-compressed':actualMode==='max'?'Rasterized (JPEG)':'Smart balanced';
+
+  if(actualMode==='safe'){
+    document.getElementById('searchability').textContent='Full';document.getElementById('searchSub').textContent='Native text layer';document.getElementById('searchIcon').textContent='✅';
+    document.getElementById('linksStatus').textContent='Preserved';document.getElementById('linkSub').textContent='All hyperlinks intact';
+    document.getElementById('searchBanner').className='search-banner good';document.getElementById('bannerIcon').textContent='✅';
+    document.getElementById('bannerText').innerHTML='<strong>Fully searchable.</strong> Text is selectable, copyable, and Google-crawlable. All hyperlinks work.';
+  }else if(ocrRan){
+    document.getElementById('searchability').textContent='OCR Layer';document.getElementById('searchSub').textContent='Hidden text overlay';document.getElementById('searchIcon').textContent='🔍';
+    document.getElementById('linksStatus').textContent='Lost';document.getElementById('linkSub').textContent='Rasterization removed links';
+    document.getElementById('searchBanner').className='search-banner warn';document.getElementById('bannerIcon').textContent='⚠️';
+    document.getElementById('bannerText').innerHTML='<strong>Approximately searchable via OCR.</strong> Text is selectable and Google can crawl it. Accuracy depends on font quality.';
+  }else{
+    document.getElementById('searchability').textContent='None';document.getElementById('searchSub').textContent='Image-only PDF';document.getElementById('searchIcon').textContent='❌';
+    document.getElementById('linksStatus').textContent='Lost';document.getElementById('linkSub').textContent='Not preserved';
+    document.getElementById('searchBanner').className='search-banner bad';document.getElementById('bannerIcon').textContent='❌';
+    document.getElementById('bannerText').innerHTML='<strong>Not Google-crawlable.</strong> Image-only PDF. Use Content-Safe mode or enable OCR for search visibility.';
+  }
+  // Before/After preview — pdf.js still used client-side just for thumbnails
+  try{
+    const compBytes=new Uint8Array(await blob.arrayBuffer());
+    const[thumbOrig,thumbComp]=await Promise.all([appState.originalThumb?Promise.resolve(appState.originalThumb):Promise.resolve(null),captureThumb(compBytes)]);
+    const row=document.getElementById('previewRow'),po=document.getElementById('prevOrig'),pc=document.getElementById('prevComp');
+    if(thumbOrig||thumbComp){
+      row.style.display='grid';
+      if(thumbOrig){const img=new Image();img.src=thumbOrig;po.innerHTML='';po.appendChild(img);}
+      if(thumbComp){const img=new Image();img.src=thumbComp;pc.innerHTML='';pc.appendChild(img);}
+    }
+  }catch(e){}
+  // Download — track blob URL so resetApp() can revoke it
+  const url=URL.createObjectURL(blob);
+  appState._singleBlobUrl=url;
+  const dl=document.getElementById('downloadBtn');
+  dl.href=url;dl.download=file.name.replace(/\.pdf$/i,'')+'_compressed.pdf';
+  dl.onclick=()=>setTimeout(()=>{URL.revokeObjectURL(url);appState._singleBlobUrl=null;},60000);
+  DOM.progressSection.style.display='none';
+  DOM.results.style.display='block';
+  DOM.results.focus();
+  const saved=Math.max(0,orig-comp);
+  showToast(`Saved ${pct}% — ${formatBytes(saved)} smaller!`,'success');
+}
+
+// ── Batch results display ─────────────────────────────────────────────
+async function showBatchResults(){
+  const results=appState.batchResults;
+  const successful=results.filter(r=>!r.error&&r.blob);
+  const totalOrig=results.reduce((s,r)=>s+r.file.size,0);
+  const totalComp=successful.reduce((s,r)=>s+r.blob.size,0);
+  const totalSaved=Math.max(0,totalOrig-totalComp);
+  const avgPct=successful.length?((successful.reduce((s,r)=>s+r.pct,0))/successful.length).toFixed(1):'0';
+  const elapsed=Math.floor((Date.now()-appState.batchStartTime)/1000);
+
+  document.getElementById('batchTotalSaved').textContent=formatBytes(totalSaved);
+  document.getElementById('batchFileCount').textContent=`${successful.length}/${results.length}`;
+  document.getElementById('batchAvgPct').textContent=avgPct+'%';
+  document.getElementById('batchTimeTaken').textContent=elapsed+'s';
+
+  // Build table rows
+  const tbody=document.getElementById('batchTableBody');
+  tbody.innerHTML='';
+  results.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.className='batch-row'+(r.error?' failed-row':'');
+    row.setAttribute('role','row');
+    row.setAttribute('aria-label',`${r.file.name}: ${r.error?'failed':r.pct.toFixed(1)+'% reduction'}`);
+    const saved=r.blob?Math.max(0,r.file.size-r.blob.size):0;
+    const dlCell=r.blob?`<a class="batch-dl-link" href="#" id="batchDl${i}" aria-label="Download compressed ${escapeHtml(r.file.name)}">⬇ Download</a>`:`<span class="batch-dl-link err" aria-label="Compression failed">Failed</span>`;
+    row.innerHTML=`
+      <div class="batch-row-name" role="cell" title="${escapeHtml(r.file.name)}">${escapeHtml(r.file.name)}</div>
+      <div class="batch-row-sizes" role="cell"><strong>${formatBytes(r.blob?r.blob.size:r.file.size)}</strong><br><span style="font-size:9px" aria-hidden="true">${formatBytes(r.file.size)} orig</span></div>
+      <div class="batch-row-pct ${r.error||r.pct<1?'bad':''}" role="cell">${r.error?'Error':r.pct.toFixed(1)+'%'}</div>
+      <div class="batch-row-dl" role="cell">${dlCell}</div>`;
+    tbody.appendChild(row);
+    if(r.blob){
+      const url=URL.createObjectURL(r.blob);
+      appState.batchBlobUrls.push(url);  // tracked for cleanup on reset
+      const link=document.getElementById(`batchDl${i}`);
+      if(link){
+        link.href=url;
+        link.download=r.file.name.replace(/\.pdf$/i,'')+'_compressed.pdf';
+        link.onclick=()=>setTimeout(()=>URL.revokeObjectURL(url),60000);
+      }
+    }
+  });
+
+  // Show/hide ZIP button based on whether we have any successful results
+  const zipBtn=document.getElementById('zipBtn');
+  zipBtn.disabled=successful.length===0;
+  zipBtn.textContent=`📦 Download All ${successful.length} Files as ZIP`;
+
+  DOM.progressSection.style.display='none';
+  DOM.batchResults.style.display='block';
+  DOM.batchResults.scrollIntoView({behavior:'smooth',block:'start'});
+  // Move focus to batch results so screen reader announces the outcome
+  DOM.batchResults.focus();
+  showToast(`Batch complete — ${successful.length}/${results.length} files compressed`,'success');
+}
+
+// ── ZIP download — loads JSZip only when needed ───────────────────────
+async function downloadAllAsZip(){
+  const zipBtn=document.getElementById('zipBtn');
+  zipBtn.disabled=true;zipBtn.textContent='⏳ Building ZIP…';
+  try{
+    // Dynamically load JSZip
+    await new Promise((resolve,reject)=>{
+      if(window.JSZip){resolve();return;}
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=resolve;s.onerror=()=>reject(new Error('JSZip failed to load'));
+      document.head.appendChild(s);
+    });
+    const zip=new JSZip();
+    const successful=appState.batchResults.filter(r=>r.blob&&!r.error);
+    for(const r of successful){
+      const bytes=await r.blob.arrayBuffer();
+      const name=r.file.name.replace(/\.pdf$/i,'')+'_compressed.pdf';
+      zip.file(name,bytes);
+    }
+    const content=await zip.generateAsync({type:'blob',compression:'STORE'});
+    const url=URL.createObjectURL(content);
+    const a=document.createElement('a');
+    a.href=url;a.download=`nanopress_batch_${successful.length}_files.zip`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+    showToast(`ZIP downloaded — ${successful.length} files inside`,'success');
+  }catch(e){
+    console.error('ZIP error:',e);
+    showToast('ZIP creation failed: '+e.message,'error');
+  }
+  zipBtn.disabled=false;zipBtn.textContent=`📦 Download All ${appState.batchResults.filter(r=>r.blob).length} Files as ZIP`;
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────
+function resetApp(){
+  // Revoke all tracked download URLs to free memory
+  appState.batchBlobUrls.forEach(u=>{try{URL.revokeObjectURL(u);}catch(e){}});
+  if(appState._singleBlobUrl){try{URL.revokeObjectURL(appState._singleBlobUrl);}catch(e){}}
+  // Abort any in-flight server request
+  if(appState._serverAbort){try{appState._serverAbort.abort();}catch(e){}}
+  appState={
+    files:[],fileStatuses:[],currentFile:null,
+    mode:appState.mode,profile:appState.profile,
+    ocrEnabled:appState.ocrEnabled,ocrLang:appState.ocrLang,
+    ocrSucceeded:false,actualMode:'safe',
+    processing:false,cancelFlag:false,
+    compressedBlob:null,originalThumb:null,pdfLibCompatible:true,
+    batchResults:[],batchBlobUrls:[],batchStartTime:0,
+    _serverStats:null,_serverAbort:null,_singleBlobUrl:null,
+    stats:appState.stats
+  };
+  currentRenderTask=null;
+  DOM.fileInput.value='';
+  DOM.dropZone.style.display='block';DOM.fileBar.style.display='none';DOM.batchQueue.style.display='none';
+  DOM.progressSection.style.display='none';DOM.results.style.display='none';DOM.batchResults.style.display='none';
+  DOM.compressBtn.disabled=false;DOM.compressBtnLabel.textContent='Compress PDF';
+  document.getElementById('previewRow').style.display='none';
+  DOM.batchOverallFill.style.width='0%';
+  DOM.batchStatusLine.style.display='none';
+  clearInterval(timerInterval);
+  DOM.metaTitle.value='';DOM.metaAuthor.value='';DOM.metaSubject.value='';DOM.metaKeywords.value='';DOM.pageRange.value='';
+  if(DOM.estHint)DOM.estHint.style.display='none';
+}
+
+// ── Events ────────────────────────────────────────────────────────────
+DOM.dropZone.addEventListener('click',()=>DOM.fileInput.click());
+DOM.fileInput.addEventListener('change',e=>loadFiles(e.target.files));
+// Drop zone keyboard: Enter/Space activate browse
+DOM.dropZone.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();DOM.fileInput.click();}
+});
+DOM.dropZone.addEventListener('dragover',e=>{e.preventDefault();DOM.dropZone.classList.add('drag-over');});
+DOM.dropZone.addEventListener('dragleave',()=>DOM.dropZone.classList.remove('drag-over'));
+DOM.dropZone.addEventListener('drop',e=>{e.preventDefault();DOM.dropZone.classList.remove('drag-over');loadFiles(e.dataTransfer.files);});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();if(appState.currentFile&&!appState.processing)startCompression();}
+  if(e.ctrlKey&&e.key==='o'){e.preventDefault();DOM.fileInput.click();}
+  if(e.key==='Escape'){if(appState.processing)cancelCompression();else resetApp();}
+});
+
+// ── Persist stats ─────────────────────────────────────────────────────
+try{const saved=localStorage.getItem('nanopress_stats');if(saved){const s=JSON.parse(saved);appState.stats.totalSaved=s.totalSaved||0;appState.stats.filesProcessed=s.filesProcessed||0;updateStatsDisplay();}}catch(e){}
+setInterval(()=>{try{localStorage.setItem('nanopress_stats',JSON.stringify({totalSaved:appState.stats.totalSaved,filesProcessed:appState.stats.filesProcessed}));}catch(e){}},5000);
+
+showToast('NanoPress Pro ready · Drop PDFs to start','success');
+
+// ── Custom cursor ─────────────────────────────────────────────────────
+(function(){
+  const dot=document.getElementById('cursorDot');
+  const ring=document.getElementById('cursorRing');
+  if(!dot||!ring) return;
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX; my=e.clientY;
+    dot.style.left=mx+'px'; dot.style.top=my+'px';
+  });
+  function animateRing(){
+    rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+  // Grow cursor on interactive elements
+  document.querySelectorAll('button,a,[role="button"],[tabindex="0"]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{dot.style.width='14px';dot.style.height='14px';});
+    el.addEventListener('mouseleave',()=>{dot.style.width='9px';dot.style.height='9px';});
+  });
+})();
+</script>
+</body>
+</html>
